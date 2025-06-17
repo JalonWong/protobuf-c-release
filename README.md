@@ -1,4 +1,4 @@
-# protobuf-c Release
+# Protobuf-c Release
 
 The compiled product of the [protobuf-c](https://github.com/protobuf-c/protobuf-c). It contains the `protoc-gen-c`, which is used as a plugin for `protoc`.
 
