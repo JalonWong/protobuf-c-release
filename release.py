@@ -10,7 +10,6 @@ SYSTEM = platform.system().lower()
 EXT = ".exe" if SYSTEM == "windows" else ""
 if SYSTEM == "darwin":
     SYSTEM = "osx"
-ARCH = platform.machine().lower()
 
 
 def show_compiler_info() -> None:
@@ -66,7 +65,8 @@ def test_protobuf_c() -> None:
 
 
 if __name__ == "__main__":
-    print("machine:", ARCH, flush=True)
+    arch = platform.machine().lower()
+    print("machine:", arch, flush=True)
     subprocess.run([PYTHON, "--version"])
     subprocess.run("bazel --version".split(), check=True)
 
@@ -82,8 +82,14 @@ if __name__ == "__main__":
     os.chdir("protobuf-c")
     with open(".gitignore", "a") as f:
         f.write("\n/bazel-*")
-    if ARCH == "arm64":
+    if arch == "arm64":
         file_replace(".bazelrc", "x86_64", "arm64")
+    elif arch == "aarch64":
+        file_replace(".bazelrc", "k8", "aarch64")
+        arch = "arm64"
+    else:
+        arch ="amd64"
+
     show_compiler_info()
     build_protobuf_c()
     test_protobuf_c()
@@ -92,7 +98,6 @@ if __name__ == "__main__":
     if SYSTEM == "windows" or SYSTEM == "osx":
         import zipfile
 
-        arch = "arm64" if ARCH == "arm64" else "amd64"
         with zipfile.ZipFile(f"protobuf-c-{SYSTEM}-{arch}.zip", "w", zipfile.ZIP_DEFLATED) as zip_f:
             zip_f.write(f"protobuf-c/out/protoc-gen-c{EXT}", f"bin/protoc-gen-c{EXT}")
             zip_f.write("protobuf-c/protobuf-c/protobuf-c.proto", "proto/protobuf-c/protobuf-c.proto")
@@ -102,7 +107,7 @@ if __name__ == "__main__":
     elif SYSTEM == "linux":
         import tarfile
 
-        with tarfile.open("protobuf-c-linux-amd64.tar.gz", "w:gz") as tar:
+        with tarfile.open(f"protobuf-c-linux-{arch}.tar.gz", "w:gz") as tar:
             tar.add("protobuf-c/out/protoc-gen-c", "bin/protoc-gen-c")
             tar.add("protobuf-c/protobuf-c/protobuf-c.proto", "proto/protobuf-c/protobuf-c.proto")
             files = glob("pack_protobuf_c/*")
